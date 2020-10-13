@@ -32,6 +32,12 @@ We are learning about sampling this week. We are taking the theory of Chapter 5 
 
 **Prompt:** Without using rep_sample_n(), sample 30 beads at random from the urn five times. The resulting tibble should have two columns: `replicate` (with a value of 1 to 5) and `samp` (a list column in which each item is a tibble with 30 rows sampled, with replacement, from `urn`). Each tibble in `samp` will have the same two columns as `urn`. Hint: `sample_n()` is a very handy function. It will sample a random selection of rows from a tibble which you pass it. Also, use `str()` and `view()` interactively to confirm that your oject looks the way you want.
 
+```{r}
+samples <- tibble(replicate = 1:5, 
+       samp = map(replicate, ~ sample_n(urn, size = 30, replace = TRUE)))
+samples$samp
+  
+```
 
 
 
@@ -39,6 +45,18 @@ We are learning about sampling this week. We are taking the theory of Chapter 5 
 
 **Prompt:** What is the probability that, if you sample 50 beads at random, there will be more red than blue beads in the sample?
 
+```{r}
+samples <- tibble(replicate = 1:1000, 
+       samp = map(replicate, ~ sample_n(urn, size = 50, replace = TRUE))) %>%
+  mutate(num_red = map_int(samp, ~sum(.$color == "red"))) %>%
+  mutate(num_blue = map_int(samp, ~sum(.$color == "blue"))) %>%
+  mutate(prob = num_red > num_blue) %>%
+  # can also use if_else to specify if we wanted output from logical to be different
+  summarize(mean(prob))
+
+View(samples)
+
+```
 
 
 
@@ -46,6 +64,25 @@ We are learning about sampling this week. We are taking the theory of Chapter 5 
 ## Scene 3
 
 **Prompt:** As in the book, we will be calculating our posterior distribution of the number of red beads in the urn. Assume that we know that there are 1,000 beads in the urn, all either red, blue or yellow. Create an unnormalized joint distribution of the set of models we are considering and the possible results of our experiment. In this example, we are using a paddle of size 25. (You may want to review the meaning of an unnormalized joint distribution from Chapter 5.) Plot that distribution. It should look very similar to the first plot in Section 6.6.1.
+
+```{r}
+# list all of true values
+tibble(num_red = 0:1000) %>%
+  mutate(red_draws = map_int(num_red, ~ rbinom(n = 1,
+                                               size =25,
+                                               prob = ./1000)))
+
+samples <- tibble(replicate = 1:5, 
+       samp = map(replicate, ~ sample_n(urn, size = 25, replace = TRUE))) %>%
+  mutate(num_red = map_int(samp, ~sum(.$color == "red"))) %>%
+  mutate(num_blue = map_int(samp, ~sum(.$color == "blue"))) %>%
+  mutate(num_yellow = map_int(samp, ~sum(.$color == "yellow"))) 
+
+
+
+  
+```
+
 
 Interpret the meaning of the graphic.
 
